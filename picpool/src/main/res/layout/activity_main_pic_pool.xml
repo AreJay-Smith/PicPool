@@ -99,7 +99,7 @@
                     android:layout_height="82dp">
 
                     <FrameLayout
-                        android:id="@+id/topbar"
+                        android:id="@+id/con_topbar"
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
                         android:background="#fff"
@@ -114,7 +114,7 @@
                             android:src="@drawable/ic_arrow_back_black"/>
 
                         <TextView
-                            android:id="@+id/selection_count"
+                            android:id="@+id/tv_selection_count"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical|left"
@@ -147,6 +147,8 @@
 
                     <android.support.v7.widget.RecyclerView
                         android:id="@+id/instantRecyclerView"
+                        app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+                        android:orientation="horizontal"
                         android:layout_width="match_parent"
                         android:layout_height="82dp"/>
                 </FrameLayout>
@@ -188,7 +190,7 @@
             android:layout_gravity="bottom">
 
             <ImageView
-                android:id="@+id/clickme"
+                android:id="@+id/img_ring"
                 android:layout_width="70dp"
                 android:layout_height="70dp"
                 android:layout_gravity="center|bottom"
@@ -196,7 +198,7 @@
                 android:background="@drawable/ring"/>
 
             <FrameLayout
-                android:id="@+id/flash"
+                android:id="@+id/con_flash"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_gravity="top|left"
@@ -214,7 +216,7 @@
             </FrameLayout>
 
             <ImageView
-                android:id="@+id/front"
+                android:id="@+id/img_camera_toggle"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_gravity="top|right"
