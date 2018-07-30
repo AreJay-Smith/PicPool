@@ -10,8 +10,8 @@ import android.view.WindowManager
 
 object Utility {
 
-    private var HEIGHT: Int = 0
-    private var WIDTH:Int = 0
+    var HEIGHT: Int = 0
+    var WIDTH:Int = 0
 
     fun setupStatusBarHidden(appCompatActivity: AppCompatActivity) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {

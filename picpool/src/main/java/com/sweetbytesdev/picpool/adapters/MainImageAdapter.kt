@@ -9,6 +9,7 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.FitCenter
 import com.bumptech.glide.request.RequestOptions
 import com.sweetbytesdev.picpool.Interfaces.OnSelectionListener
+import com.sweetbytesdev.picpool.Utility.HeaderItemDecoration
 import com.sweetbytesdev.picpool.Utility.Utility
 import com.sweetbytesdev.picpool.models.Img
 import java.util.ArrayList
