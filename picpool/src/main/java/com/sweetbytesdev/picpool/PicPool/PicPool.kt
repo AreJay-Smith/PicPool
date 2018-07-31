@@ -2,11 +2,14 @@ package com.sweetbytesdev.picpool.PicPool
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.support.design.widget.BottomSheetBehavior
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import android.support.v4.content.res.ResourcesCompat
+import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -116,7 +119,9 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
     private var mainImageAdapter: MainImageAdapter? = null
     private var mLayoutManager: GridLayoutManager? = null
     private val selectionList = HashSet<Img>()
-    private var mBottomSheetBehavior: BottomSheetBehavior? = null
+    private var mBottomSheetBehavior: BottomSheetBehavior<*>? = null
+    private var topbar: View? = null
+    private var LongSelection = false
 
     private fun initialize() {
         Utility.getScreenSize(this)
@@ -216,9 +221,17 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
             returnObjects()
         }
 
-        selection_back.setOnClickListener {
+        selection_back?.setOnClickListener {
             mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED)
         }
+        selection_check?.setOnClickListener(View.OnClickListener {
+            topbar.setBackgroundColor(colorPrimaryDark)
+            selection_count.setText(resources.getString(R.string.pix_tap_to_select))
+            img_count.setText(selectionList.size.toString())
+            DrawableCompat.setTint(selection_back.getDrawable(), Color.parseColor("#ffffff"))
+            LongSelection = true
+            selection_check.setVisibility(View.GONE)
+        })
     }
 
     fun returnObjects() {
