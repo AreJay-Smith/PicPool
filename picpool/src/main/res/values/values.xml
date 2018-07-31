@@ -6,4 +6,6 @@
     <color name="colorPrimaryPicPool">#075e54</color>
     <string name="message_to_drag_up">Drag images up for gallery</string>
     <string name="ok">OK</string>
+
+    <string name="pix_recent">Recent</string>
 </resources>

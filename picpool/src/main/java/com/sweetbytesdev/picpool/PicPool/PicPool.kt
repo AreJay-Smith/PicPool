@@ -1,5 +1,6 @@
 package com.sweetbytesdev.picpool.PicPool
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -7,26 +8,35 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import com.sweetbytesdev.picpool.Interfaces.WorkFinish
 import com.sweetbytesdev.picpool.R
+import com.sweetbytesdev.picpool.Utility.HeaderItemDecoration
 import com.sweetbytesdev.picpool.Utility.PermUtil
 import com.sweetbytesdev.picpool.Utility.Utility
 import com.sweetbytesdev.picpool.adapters.MainImageAdapter
 import com.sweetbytesdev.picpool.adapters.InstantImageAdapter
+import com.sweetbytesdev.picpool.models.Img
 import com.wonderkiln.camerakit.CameraKit
+import com.wonderkiln.camerakit.CameraKitEventCallback
+import com.wonderkiln.camerakit.CameraKitImage
 import com.wonderkiln.camerakit.CameraView
+import java.util.ArrayList
+import java.util.HashSet
 
 class PicPool : AppCompatActivity(), View.OnTouchListener {
 
     companion object {
 
         private val SELECTION = "selection"
+        val IMAGE_RESULTS = "image_results"
         var TOPBAR_HEIGHT: Float = 0.toFloat()
 
         fun start(context: Fragment, requestCode: Int, selectionCount: Int) {
@@ -83,6 +93,7 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
     private var mCamera: CameraView? = null
     private var colorPrimaryDark: Int = 0
     private var mHandleView: ImageView? = null
+    private var clickme: ImageView? = null
     private var mCaptureRing: ImageView? = null
     private var selection_back: ImageView? = null
     private var selection_check: ImageView? = null
@@ -102,6 +113,10 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
     private var initializeAdapter:InstantImageAdapter? = null
     private var mainFrameLayout:FrameLayout? = null
     private var bottomBarHeight = 0
+    private var mainImageAdapter: MainImageAdapter? = null
+    private var mLayoutManager: GridLayoutManager? = null
+    private val selectionList = HashSet<Img>()
+    private var mBottomSheetBehavior: BottomSheetBehavior? = null
 
     private fun initialize() {
         Utility.getScreenSize(this)
@@ -157,7 +172,65 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
                 Utility.convertDpToPixel(174f, this) as Int)
         sendButton?.layoutParams = layoutParams
 
-        mImageAdapter = MainImageAdapter(this)
+        // Set up main recyclerview
+        mainImageAdapter = MainImageAdapter(this)
+        mLayoutManager = GridLayoutManager(this, MainImageAdapter.SPAN_COUNT)
+        mLayoutManager?.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int {
+                return if (mainImageAdapter?.getItemViewType(position) === MainImageAdapter.HEADER) {
+                    MainImageAdapter.SPAN_COUNT
+                } else 1
+            }
+        }
+        recyclerView?.layoutManager = mLayoutManager
+        mainImageAdapter?.addOnSelectionListener(onSelectionListener)
+        recyclerView?.adapter = mainImageAdapter
+        recyclerView?.addItemDecoration(HeaderItemDecoration(this, recyclerView!!, mainImageAdapter!!))
+
+        mHandleView?.setOnTouchListener(this)
+
+        // Taking the picture
+        clickme?.setOnClickListener(View.OnClickListener {
+            mCamera?.captureImage(CameraKitEventCallback { cameraKitImage ->
+                if (cameraKitImage.jpeg != null) {
+                    synchronized(cameraKitImage) {
+                        val photo = Utility.writeImage(cameraKitImage.jpeg)
+                        selectionList.clear()
+                        selectionList.add(Img("", "", photo.getAbsolutePath(), false, "", -1))
+                        returnObjects()
+                    }
+                } else {
+                    Toast.makeText(this, "Unable to Get The Image", Toast.LENGTH_SHORT).show()
+                }
+            })
+            // Toast.makeText(Pix.this, "fin", Toast.LENGTH_SHORT).show();
+            //Log.e("Hello", "onclick");
+        })
+
+        // Ok'ing the chosen selection
+        selection_ok?.setOnClickListener {
+            returnObjects()
+        }
+
+        sendButton?.setOnClickListener {
+            returnObjects()
+        }
+
+        selection_back.setOnClickListener {
+            mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED)
+        }
+    }
+
+    fun returnObjects() {
+        val list = ArrayList<String>()
+        for (i in selectionList) {
+            list.add(i.url)
+            // Log.e("Pix images", "img " + i.getUrl());
+        }
+        val resultIntent = Intent()
+        resultIntent.putStringArrayListExtra(IMAGE_RESULTS, list)
+        setResult(Activity.RESULT_OK, resultIntent)
+        finish()
     }
 
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
