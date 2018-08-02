@@ -3,6 +3,7 @@ package com.sweetbytesdev.picpool.PicPool
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
@@ -30,15 +31,15 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import com.sweetbytesdev.picpool.Interfaces.FastScrollStateChangeListener
+import com.sweetbytesdev.picpool.Interfaces.OnSelectionListener
 import com.sweetbytesdev.picpool.Interfaces.WorkFinish
 import com.sweetbytesdev.picpool.R
 import com.sweetbytesdev.picpool.Utility.*
-import com.sweetbytesdev.picpool.adapters.MainImageAdapter
 import com.sweetbytesdev.picpool.adapters.InstantImageAdapter
+import com.sweetbytesdev.picpool.adapters.MainImageAdapter
 import com.sweetbytesdev.picpool.models.Img
 import com.wonderkiln.camerakit.CameraKit
 import com.wonderkiln.camerakit.CameraKitEventCallback
-import com.wonderkiln.camerakit.CameraKitImage
 import com.wonderkiln.camerakit.CameraView
 import java.util.*
 
@@ -130,9 +131,9 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
     private var bottomButtons: FrameLayout? = null
     private var status_bar_bg: View? = null
     private var recyclerView: RecyclerView? = null
-    private var instantRecyclerView:RecyclerView? = null
-    private var initializeAdapter:InstantImageAdapter? = null
-    private var mainFrameLayout:FrameLayout? = null
+    private var instantRecyclerView: RecyclerView? = null
+    private var initializeAdapter: InstantImageAdapter? = null
+    private var mainFrameLayout: FrameLayout? = null
     private var bottomBarHeight = 0
     private var mainImageAdapter: MainImageAdapter? = null
     private var mLayoutManager: GridLayoutManager? = null
@@ -153,6 +154,7 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
 
     private var mBubbleAnimator: ViewPropertyAnimator? = null
 
+    @SuppressLint("ObjectAnimatorBinding")
     private fun initialize() {
         Utility.getScreenSize(this)
         if (supportActionBar != null) {
@@ -204,7 +206,7 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
         mainFrameLayout?.layoutParams = lp
         val layoutParams = sendButton?.layoutParams as FrameLayout.LayoutParams
         layoutParams.setMargins(0, 0, Utility.convertDpToPixel(16f, this).toInt(),
-                Utility.convertDpToPixel(174f, this) as Int)
+                Utility.convertDpToPixel(174f, this).toInt())
         sendButton?.layoutParams = layoutParams
 
         // Set up main recyclerview
@@ -212,7 +214,7 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
         mLayoutManager = GridLayoutManager(this, MainImageAdapter.SPAN_COUNT)
         mLayoutManager?.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int {
-                return if (mainImageAdapter?.getItemViewType(position) === MainImageAdapter.HEADER) {
+                return if (mainImageAdapter?.getItemViewType(position) == MainImageAdapter.HEADER) {
                     MainImageAdapter.SPAN_COUNT
                 } else 1
             }
@@ -252,7 +254,7 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
         }
 
         selection_back?.setOnClickListener {
-            mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED)
+            mBottomSheetBehavior?.setState(BottomSheetBehavior.STATE_COLLAPSED)
         }
         selection_check?.setOnClickListener(View.OnClickListener {
             topbar?.setBackgroundColor(colorPrimaryDark)
@@ -267,7 +269,7 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
         mCamera?.flash = CameraKit.Constants.FLASH_AUTO
         flash?.setOnClickListener(View.OnClickListener {
             val height = flash?.height
-            iv.animate().translationY(height.toFloat()).setDuration(100).setListener(object : AnimatorListenerAdapter() {
+            iv.animate().translationY(height!!.toFloat()).setDuration(100).setListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     super.onAnimationEnd(animation)
                     iv.translationY = (-(height / 2)).toFloat()
@@ -316,7 +318,7 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
         var header = ""
         var limit = 100
         if (cursor?.count!! < 100) {
-            limit = cursor?.count
+            limit = cursor.count
         }
         val date = cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN)
         val data = cursor.getColumnIndex(MediaStore.Images.Media.DATA)
@@ -509,7 +511,7 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
                     mFastScrollStateChangeListener.onFastScrollStart(this)
                 }
                 val y = event.rawY
-                mBubbleView.setText(mainImageAdapter?.getSectionText(recyclerView!!.verticalScrollbarPosition))
+                mBubbleView?.text = mainImageAdapter?.getSectionText(recyclerView!!.verticalScrollbarPosition)
                 setViewPositions(y - TOPBAR_HEIGHT)
                 setRecyclerViewPosition(y)
                 return true
@@ -577,6 +579,130 @@ class PicPool : AppCompatActivity(), View.OnTouchListener {
             mBottomSheetBehavior?.setState(BottomSheetBehavior.STATE_COLLAPSED)
         } else {
             super.onBackPressed()
+        }
+    }
+
+    private val onSelectionListener = object : OnSelectionListener {
+
+        override fun OnClick(img: Img, view: View, position: Int) {
+            //Log.e("OnClick", "OnClick");
+            if (LongSelection) {
+                if (selectionList.contains(img)) {
+                    selectionList.remove(img)
+                    initializeAdapter?.select(false, position)
+                    mainImageAdapter?.select(false, position)
+                } else {
+                    if (SelectionCount <= selectionList.size) {
+                        Toast.makeText(this@PicPool, String.format(resources.getString(R.string.selection_limiter), selectionList.size), Toast.LENGTH_SHORT).show()
+                        return
+                    }
+                    img.position = position
+                    selectionList.add(img)
+                    initializeAdapter?.select(true, position)
+                    mainImageAdapter?.select(true, position)
+                }
+                if (selectionList.size == 0) {
+                    LongSelection = false
+                    selection_check?.visibility = View.VISIBLE
+                    DrawableCompat.setTint(selection_back!!.drawable, colorPrimaryDark)
+                    topbar?.setBackgroundColor(Color.parseColor("#ffffff"))
+                    val anim = ScaleAnimation(
+                            1f, 0f, // Start and end values for the X axis scaling
+                            1f, 0f, // Start and end values for the Y axis scaling
+                            Animation.RELATIVE_TO_SELF, 0.5f, // Pivot point of X scaling
+                            Animation.RELATIVE_TO_SELF, 0.5f) // Pivot point of Y scaling
+                    anim.fillAfter = true // Needed to keep the result of the animation
+                    anim.duration = 300
+                    anim.setAnimationListener(object : Animation.AnimationListener {
+                        override fun onAnimationStart(animation: Animation) {
+
+                        }
+
+                        override fun onAnimationEnd(animation: Animation) {
+                            sendButton?.visibility = View.GONE
+                            sendButton?.clearAnimation()
+                        }
+
+                        override fun onAnimationRepeat(animation: Animation) {
+
+                        }
+                    })
+                    sendButton?.startAnimation(anim)
+
+                }
+                selection_count?.text = resources.getString(R.string.selected) + selectionList.size
+                img_count?.text = selectionList.size.toString()
+            } else {
+                img.position = position
+                selectionList.add(img)
+                returnObjects()
+                DrawableCompat.setTint(selection_back!!.drawable, colorPrimaryDark)
+                topbar?.setBackgroundColor(Color.parseColor("#ffffff"))
+            }
+        }
+
+        override fun OnLongClick(img: Img, view: View, position: Int) {
+            if (SelectionCount > 1) {
+                Utility.vibe(this@PicPool, 50)
+                //Log.e("OnLongClick", "OnLongClick");
+                LongSelection = true
+                if (selectionList.size == 0) {
+                    if (mBottomSheetBehavior?.state != BottomSheetBehavior.STATE_EXPANDED) {
+                        sendButton?.visibility = View.VISIBLE
+                        val anim = ScaleAnimation(
+                                0f, 1f, // Start and end values for the X axis scaling
+                                0f, 1f, // Start and end values for the Y axis scaling
+                                Animation.RELATIVE_TO_SELF, 0.5f, // Pivot point of X scaling
+                                Animation.RELATIVE_TO_SELF, 0.5f) // Pivot point of Y scaling
+                        anim.fillAfter = true // Needed to keep the result of the animation
+                        anim.duration = 300
+                        sendButton?.startAnimation(anim)
+                    }
+                }
+                if (selectionList.contains(img)) {
+                    selectionList.remove(img)
+                    initializeAdapter?.select(false, position)
+                    mainImageAdapter?.select(false, position)
+                } else {
+                    img.position = position
+                    selectionList.add(img)
+                    initializeAdapter?.select(true, position)
+                    mainImageAdapter?.select(true, position)
+                }
+                selection_check?.visibility = View.GONE
+                topbar?.setBackgroundColor(colorPrimaryDark)
+                selection_count?.text = "Selected " + selectionList.size
+                img_count?.text = selectionList.size.toString()
+                DrawableCompat.setTint(selection_back!!.drawable, Color.parseColor("#ffffff"))
+            }
+        }
+    }
+
+    private val mScrollListener = object : RecyclerView.OnScrollListener() {
+
+        override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
+            if (!mHandleView?.isSelected!! && recyclerView!!.isEnabled) {
+                setViewPositions(getScrollProportion(recyclerView))
+            }
+        }
+
+        override fun onScrollStateChanged(recyclerView: RecyclerView?, newState: Int) {
+            super.onScrollStateChanged(recyclerView, newState)
+
+            if (recyclerView!!.isEnabled) {
+                when (newState) {
+                    RecyclerView.SCROLL_STATE_DRAGGING -> {
+                        handler.removeCallbacks(mScrollbarHider)
+                        Utility.cancelAnimation(mScrollbarAnimator)
+                        if (!Utility.isViewVisible(mScrollbar) && recyclerView.computeVerticalScrollRange() - mViewHeight > 0) {
+                            mScrollbarAnimator = Utility.showScrollbar(mScrollbar!!, this@PicPool)
+                        }
+                    }
+                    RecyclerView.SCROLL_STATE_IDLE -> if (mHideScrollbar && !mHandleView?.isSelected!!) {
+                        handler.postDelayed(mScrollbarHider, sScrollbarHideDelay.toLong())
+                    }
+                }
+            }
         }
     }
 }

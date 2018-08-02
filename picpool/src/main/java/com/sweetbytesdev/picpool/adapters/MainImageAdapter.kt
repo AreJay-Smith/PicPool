@@ -85,7 +85,7 @@ class MainImageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>, HeaderIt
     }
 
     override fun getItemId(position: Int): Long {
-        return list[position].contentUrl.hashCode().toLong()
+        return list[position].contentUrl?.hashCode()!!.toLong()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -101,7 +101,7 @@ class MainImageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>, HeaderIt
         var image = list[position]
         if (holder is Holder) {
             glide.load(image.contentUrl).apply(options).into(holder.preview)
-            holder.selection.visibility = if (image.isSelected) View.VISIBLE else View.GONE
+            holder.selection.visibility = if (image.isSelected!!) View.VISIBLE else View.GONE
         } else if (holder is HeaderHolder) {
             holder.header.text = image.headerDate
         }
@@ -138,11 +138,11 @@ class MainImageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>, HeaderIt
     }
 
     override fun getSectionText(position: Int): String {
-        return list[position].headerDate
+        return list[position].headerDate!!
     }
 
     fun getSectionMonthYearText(position: Int): String {
-        return list[position].scrollerDate
+        return list[position].scrollerDate!!
     }
 
     inner class Holder : RecyclerView.ViewHolder, View.OnClickListener, View.OnLongClickListener {

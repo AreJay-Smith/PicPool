@@ -70,7 +70,7 @@ class InstantImageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     override fun getItemViewType(position: Int): Int {
         val image = list[position]
-        return if (image.contentUrl.isEmpty()) MainImageAdapter.HEADER else MainImageAdapter.ITEM
+        return if (image.contentUrl!!.isEmpty()) MainImageAdapter.HEADER else MainImageAdapter.ITEM
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
@@ -88,7 +88,7 @@ class InstantImageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             glide.load(image.contentUrl).apply(options).into(imageHolder.preview)
 
-            imageHolder.selection.visibility = if (image.isSelected) View.VISIBLE else View.GONE
+            imageHolder.selection.visibility = if (image.isSelected!!) View.VISIBLE else View.GONE
         } else {
             val noneHolder = holder as HolderNone
             val layoutParams = FrameLayout.LayoutParams(0, 0)

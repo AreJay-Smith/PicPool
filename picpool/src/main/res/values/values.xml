@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="margin_top">0dp</dimen>
-    <dimen name="margin_top_nve">0dp</dimen>
     <color name="colorPrimaryLightPicPool">#80075e54</color>
     <color name="colorPrimaryPicPool">#075e54</color>
-    <string name="message_to_drag_up">Drag images up for gallery</string>
-    <string name="ok">OK</string>
-
-    <string name="pix_recent">Recent</string>
 </resources>

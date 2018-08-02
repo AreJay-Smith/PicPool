@@ -6,6 +6,7 @@ import android.content.Context
 import android.database.Cursor
 import android.os.Build
 import android.os.Environment
+import android.os.Vibrator
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.RecyclerView
 import android.util.DisplayMetrics
@@ -175,6 +176,10 @@ object Utility {
             topbar.visibility = View.GONE
             status_bar_bg.animate().translationY((-status_bar_bg.height).toFloat()).setDuration(300).start()
         }
+    }
+
+    fun vibe(c: Context, l: Long) {
+        (c.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator).vibrate(l)
     }
 
     fun cancelAnimation(animator: ViewPropertyAnimator?) {
